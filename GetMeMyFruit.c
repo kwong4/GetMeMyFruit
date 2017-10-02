@@ -23,6 +23,155 @@ int collided(int x, int y)
 	return blockdata->tl;
 }
 
+// Print insturction screen
+void instructions() {
+	
+	// Clear screen
+	rectfill(screen, 0, 0, WIDTH, HEIGHT, BLACK);
+	
+	// Print game info
+	textout_centre_ex(screen, font, "GAME INFO:", WIDTH/2, HEIGHT/4, WHITE, BLACK);
+	textout_ex(screen, font, "- You are tasked with collecting 4 different types of fruit:", WIDTH/8, HEIGHT/4 + 20, WHITE, BLACK);
+	textout_ex(screen, font, "    - Orange", WIDTH/8, HEIGHT/4 + 30, ORANGE, BLACK);
+	textout_ex(screen, font, "    - Watermelon", WIDTH/8, HEIGHT/4 + 40, GREEN, BLACK);
+	textout_ex(screen, font, "    - Apple", WIDTH/8, HEIGHT/4 + 50, RED, BLACK);
+	textout_ex(screen, font, "    - Grape", WIDTH/8, HEIGHT/4 + 60, BLUE, BLACK);
+	textout_ex(screen, font, "- Avoid enemies that may look like fruit, but move!", WIDTH/8, HEIGHT/4 + 70, WHITE, BLACK);
+	textout_ex(screen, font, "- Touching an enemy will result in an instant death!", WIDTH/8, HEIGHT/4 + 80, WHITE, BLACK);
+	textout_ex(screen, font, "- Easy gamemode will make enemies move at standard speed", WIDTH/8, HEIGHT/4 + 90, WHITE, BLACK);
+	textout_ex(screen, font, "- Hard gamemode will make enemies move faster", WIDTH/8, HEIGHT/4 + 100, WHITE, BLACK);
+	
+	// Print game instructions
+	textout_centre_ex(screen, font, "INSTRUCTIONS:", WIDTH/2, HEIGHT/2 + 40, WHITE, BLACK);
+    textout_ex(screen, font, "1. Use the arrow keys to move your Character", WIDTH/8, HEIGHT/2 + 60, WHITE, BLACK);
+    textout_ex(screen, font, "   Use the LEFT key to move LEFT", WIDTH/8, HEIGHT/2 + 70, YELLOW, BLACK);
+    textout_ex(screen, font, "   Use the RIGHT key to move RIGHT", WIDTH/8, HEIGHT/2 + 80, YELLOW, BLACK);
+    textout_ex(screen, font, "2. Use the SPACE bar key to JUMP", WIDTH/8, HEIGHT/2 + 90, WHITE, BLACK);
+    textout_ex(screen, font, "4. Press Ctrl + h to bring up the instructions at any time!", WIDTH/8, HEIGHT/2 + 120, WHITE, BLACK);
+    textout_ex(screen, font, "5. Press Ctrl + m to toggle the background music at any time!", WIDTH/8, HEIGHT/2 + 130, WHITE, BLACK);
+    textout_ex(screen, font, "6. Press Esc to exit the game!", WIDTH/8, HEIGHT/2 + 140, WHITE, BLACK);
+    
+    // ENTER to return
+    textout_centre_ex(screen, font, "Press ENTER to return", WIDTH/2, HEIGHT/2 + 200, WHITE, BLACK);
+    
+    // Slow down game
+    rest(250);
+    
+    // Check input from user
+    while(1) {
+    	if (key[KEY_ENTER]) {
+    		play_sample(click_sound, 128, 128, 1000, FALSE);
+			break;
+		}
+		
+		// Background music toggle
+		if (key[KEY_LCONTROL] && key[KEY_M]) {
+			if (sound == 1) {
+				sound = 0;
+				stop_sample(background_music);
+			}
+			else {
+				sound = 1;
+				play_sample(background_music, 128, 128, 1000, TRUE);
+			}
+			rest(80);
+		}
+		
+		if (key[KEY_ESC]) {
+			allegro_exit();
+			exit(0);	
+		}
+    }
+}
+
+// Get Game menu input
+int getmenuinput() {
+	
+	// If user quits game
+	if (key[KEY_ESC]) {
+		allegro_exit();
+		exit(0);
+	}
+	
+	// Move cursor for selection
+	// Play sound for each movement
+	if (key[KEY_DOWN] && selection != max_selection) {
+		play_sample(click_sound, 128, 128, 1000, FALSE);
+		rectfill(screen, WIDTH/3 + 1, HEIGHT/2 + selection * 15 + 81, WIDTH/3 + 9, HEIGHT/2 + selection * 15 + 89, BLACK);
+		selection++;
+		rectfill(screen, WIDTH/3 + 1, HEIGHT/2 +  selection * 15 + 81, WIDTH/3 + 9, HEIGHT/2 + selection * 15 + 89, WHITE);
+	}
+	else if (key[KEY_UP] && selection != 0) {
+		play_sample(click_sound, 128, 128, 1000, FALSE);
+		rectfill(screen, WIDTH/3 + 1, HEIGHT/2 + selection * 15 + 81, WIDTH/3 + 9, HEIGHT/2 +  selection * 15 + 89, BLACK);
+		selection--;
+		rectfill(screen, WIDTH/3 + 1, HEIGHT/2 + selection * 15 + 81, WIDTH/3 + 9, HEIGHT/2 + selection * 15 + 89, WHITE);
+	}
+	else if (key[KEY_ENTER]) {
+		play_sample(click_sound, 128, 128, 1000, FALSE);
+		return -1;
+	}
+}
+
+// Print the welcome screen menu
+void welcome_screen() {
+	
+	// Blit the title
+	blit(title, screen, 0, 0, 65, 50, title->w, title->h);
+	
+	// Options and insturctions
+    textout_centre_ex(screen, font, "Press use your ARROW KEYS and ENTER to select an option!", WIDTH/2, HEIGHT/2 + 40, WHITE, BLACK);
+    rect(screen, WIDTH/3, HEIGHT/2 + 80 , WIDTH/3 + 10, HEIGHT/2 + 90, WHITE);
+    textout_ex(screen, font, "Start!", WIDTH/3 + 25, HEIGHT/2 + 82, WHITE, BLACK);
+    rect(screen, WIDTH/3, HEIGHT/2 + 95, WIDTH/3 + 10, HEIGHT/2 + 105, WHITE);
+    textout_ex(screen, font, "Instructions", WIDTH/3 + 25, HEIGHT/2 + 97, WHITE, BLACK);
+    rect(screen, WIDTH/3, HEIGHT/2 + 110, WIDTH/3 + 10, HEIGHT/2 + 120, WHITE);
+    textout_ex(screen, font, "Gamemode:", WIDTH/3 + 25, HEIGHT/2 + 112, WHITE, BLACK);
+    selection = 0;
+    rectfill(screen, WIDTH/3 + 1, HEIGHT/2 + 81, WIDTH/3 + 9, HEIGHT/2 + 89, WHITE);
+    
+    // Check if user selects Hard or Easy mode
+    if (hardmode == 0) {
+    	textout_ex(screen, font, "Easy", WIDTH/3 + 100, HEIGHT/2 + 112, YELLOW, BLACK);
+    }
+    else {
+    	textout_ex(screen, font, "Hard", WIDTH/3 + 100, HEIGHT/2 + 112, YELLOW, BLACK);
+    }	
+}
+
+// Draw initial start screen instructions
+void draw_startscreen() {
+    
+    // Run welcome screen print
+    welcome_screen();
+    
+    // Check for user input and update for user selection
+    while (1) {
+    	if (getmenuinput() == -1) {
+    		if (selection == 0) {
+    			break;
+    		}
+    		else if (selection == 1) {
+    			instructions();
+    			rectfill(screen, 0, 0, WIDTH, HEIGHT, BLACK);
+    			welcome_screen();
+    		}
+    		else {
+    			hardmode = (hardmode + 1) % 2;
+    			if (hardmode == 0) {
+		    		textout_ex(screen, font, "Easy", WIDTH/3 + 100, HEIGHT/2 + 112, YELLOW, BLACK);
+			    }
+			    else {
+			    	textout_ex(screen, font, "Hard", WIDTH/3 + 100, HEIGHT/2 + 112, YELLOW, BLACK);
+			    }
+    		}
+    	}
+    	
+    	// Slow game down
+	    rest(100);
+    }
+}
+
 // Setup initial files
 void setupscreen() {
 	
@@ -38,6 +187,29 @@ void setupscreen() {
 	    return;
 	}
 	
+	//load title screen
+	title = load_bitmap(GETMEMYFRUIT, NULL);
+	if (!title) {
+		allegro_message("Error loading title screen");
+		return;
+	}
+	
+	// Load sound files
+	background_music = load_sample(BACKGROUND_SOUND);
+	click_sound = load_sample(CLICK_SOUND);
+	
+	//install a digital sound driver
+    if (install_sound(DIGI_AUTODETECT, MIDI_NONE, "") != 0) {
+    	allegro_message("Error initalizing sound system");
+		return;	
+    }
+    
+    // Check if sound files loaded
+    if (!background_music || !click_sound) {
+    	allegro_message("Error reading wave files");
+    	return;
+    }
+	
 	//load level
 	if (MapLoad(GAME_WORLD)) {
 		allegro_message("Error loading map");
@@ -47,10 +219,16 @@ void setupscreen() {
 	//create the double buffer
 	buffer = create_bitmap (WIDTH, HEIGHT);
 	clear(buffer);
+	
+	// Draw start screen
+	draw_startscreen();
 }
 
 // Setup game
 void setupgame() {
+	
+	//Play background music
+	play_sample(background_music, 128, 128, 1000, TRUE);
 	
 	//Setup Player
 	player_image[0] = load_bitmap(PLAYER_SPRITE_WAIT1, NULL);
@@ -169,6 +347,10 @@ void update() {
     }
     if (player->y > (mapheight * mapblockheight + player->height)) {
     	gameover = 1;
+    	exit(0);
+    }
+    if (player->y < 0) {
+    	player->y = 0;	
     }
 
 	if (oldpy == player->y & oldpx == player->x) {
@@ -190,12 +372,18 @@ void update() {
 	MapDrawFG(buffer, mapxoff, mapyoff, 0, 0, WIDTH-1, HEIGHT-1, 0);
 
     //draw the player's sprite
-	if (facing == 1) 
-        draw_sprite(buffer, player_image[player->curframe], 
-            (player->x-mapxoff), (player->y-mapyoff+1));
-	else 
+	if (facing == 1) {
+		if (player->y > player->width * -1) {
+			draw_sprite(buffer, player_image[player->curframe], 
+            	(player->x-mapxoff), (player->y-mapyoff+1));
+		}
+    }
+	else {
+		if (player->y > player->width * -1) {
         draw_sprite_h_flip(buffer, player_image[player->curframe], 
             (player->x-mapxoff), (player->y-mapyoff));
+        }    
+    }
 }
 
 // Get game input from user
@@ -214,12 +402,12 @@ void getinput() {
 	// Background music toggle
 	if (key[KEY_LCONTROL] && key[KEY_M]) {
 		if (sound == 1) {
-			//sound = 0;
-			//stop_sample(background_music);
+			sound = 0;
+			stop_sample(background_music);
 		}
 		else {
-			//sound = 1;
-			//play_sample(background_music, 128, 128, 1000, TRUE);
+			sound = 1;
+			play_sample(background_music, 128, 128, 1000, TRUE);
 		}
 		rest(20);
 	}
@@ -290,6 +478,9 @@ int main (void)
     } 
     free(player);
 	destroy_bitmap(buffer);
+	destroy_bitmap(title);
+	destroy_sample(background_music);
+	destroy_sample(click_sound);
 	MapFreeMem();
 	allegro_exit();
 	return 0;
