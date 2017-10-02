@@ -23,6 +23,17 @@ int collided(int x, int y)
 	return blockdata->tl;
 }
 
+int inside(SPRITE* sprite) {
+	//is sprite visible on screen?
+    if (sprite->y > mapyoff - FRUIT_CONSTANT && sprite->y < mapyoff + HEIGHT + FRUIT_CONSTANT)
+    {
+    	if (sprite->x > mapxoff - FRUIT_CONSTANT && sprite->x < mapxoff + WIDTH + FRUIT_CONSTANT) {
+    		return 1;	
+    	}
+    }
+    return 0;
+}
+
 // Print insturction screen
 void instructions() {
 	
@@ -35,7 +46,7 @@ void instructions() {
 	textout_ex(screen, font, "    - Orange", WIDTH/8, HEIGHT/4 + 30, ORANGE, BLACK);
 	textout_ex(screen, font, "    - Watermelon", WIDTH/8, HEIGHT/4 + 40, GREEN, BLACK);
 	textout_ex(screen, font, "    - Apple", WIDTH/8, HEIGHT/4 + 50, RED, BLACK);
-	textout_ex(screen, font, "    - Grape", WIDTH/8, HEIGHT/4 + 60, BLUE, BLACK);
+	textout_ex(screen, font, "    - Berries", WIDTH/8, HEIGHT/4 + 60, BLUE, BLACK);
 	textout_ex(screen, font, "- Avoid enemies that may look like fruit, but move!", WIDTH/8, HEIGHT/4 + 70, WHITE, BLACK);
 	textout_ex(screen, font, "- Touching an enemy will result in an instant death!", WIDTH/8, HEIGHT/4 + 80, WHITE, BLACK);
 	textout_ex(screen, font, "- Easy gamemode will make enemies move at standard speed", WIDTH/8, HEIGHT/4 + 90, WHITE, BLACK);
@@ -217,7 +228,7 @@ void setupscreen() {
 	}
 	
 	//create the double buffer
-	buffer = create_bitmap (WIDTH, HEIGHT);
+	buffer = create_bitmap(WIDTH, HEIGHT);
 	clear(buffer);
 	
 	// Draw start screen
@@ -226,6 +237,9 @@ void setupscreen() {
 
 // Setup game
 void setupgame() {
+	
+	// Loop variable
+	int i;
 	
 	//Play background music
 	play_sample(background_music, 128, 128, 1000, TRUE);
@@ -237,6 +251,12 @@ void setupgame() {
 	player_image[3] = load_bitmap(PLAYER_SPRITE_WALK2, NULL);
 	player_image[4] = load_bitmap(PLAYER_SPRITE_JUMP, NULL);
 
+	// Error checking
+	if (!player_image[0] || !player_image[1] || !player_image[2] || !player_image[3] || !player_image[4]) {
+		allegro_message("Error loading fruit sprites");
+		return;
+	}
+
     player = malloc(sizeof(SPRITE));
     player->x = START_POINT_X;
     player->y = START_POINT_Y;
@@ -246,6 +266,40 @@ void setupgame() {
     player->maxframe= PLAYER_MAX_FRAME;
     player->width= player_image[0]->w;
     player->height= player_image[0]->h;
+    
+    //Setup Fruit
+	fruits_image[0] = load_bitmap(ORANGE_SPRITE, NULL);
+	fruits_image[1] = load_bitmap(WATERMELON_SPRITE, NULL);
+	fruits_image[2] = load_bitmap(APPLE_SPRITE, NULL);
+	fruits_image[3] = load_bitmap(BERRIES_SPRITE, NULL);
+	
+	// Error checking
+	if (!fruits_image[0] || !fruits_image[1] || !fruits_image[2] || !fruits_image[3]) {
+		allegro_message("Error loading fruit sprites");
+		return;
+	}
+	
+	for (i = 0; i < FRUIT_MAX; i++) {
+		fruits[i] = malloc(sizeof(SPRITE));	
+	}
+	
+	// Setup fruit sprite locations
+	fruits[0]->x = mapblockwidth;
+	fruits[0]->y = mapblockheight * 3;
+	fruits[0]->data = 0;
+	
+	fruits[1]->x = mapblockwidth * 3;
+	fruits[1]->y = mapblockheight * 26;
+	fruits[1]->data = 1;
+	
+	fruits[2]->x = mapblockwidth * 116;
+	fruits[2]->y = mapblockheight * 3;
+	fruits[2]->data = 2;
+	
+	fruits[3]->x = mapblockwidth * 118;
+	fruits[3]->y = mapblockheight * 26;
+	fruits[3]->data = 3;
+	
 }
 
 void walk(int dir) {
@@ -277,6 +331,10 @@ void wait() {
 
 void update() {
 	
+	//Loop variable
+	int i;
+	
+	// Old coordinates
 	oldpy = player->y; 
     oldpx = player->x;
 	
@@ -294,8 +352,7 @@ void update() {
         jump--; 
     }
 
-	if (jump<0) 
-    { 
+	if (jump<0) { 
         if (collided(player->x + player->width/2, 
             player->y + player->height))
 		{ 
@@ -307,13 +364,11 @@ void update() {
     }
 	
 	//check for collided with foreground tiles
-	if (facing == -1) 
-    { 
+	if (facing == -1) { 
         if (collided(player->x, player->y + player->height)) 
             player->x = oldpx; 
     }
-	else 
-    { 
+	else { 
         if (collided(player->x + player->width, 
             player->y + player->height)) 
             player->x = oldpx; 
@@ -370,6 +425,14 @@ void update() {
 
     //draw foreground tiles
 	MapDrawFG(buffer, mapxoff, mapyoff, 0, 0, WIDTH-1, HEIGHT-1, 0);
+
+	//draw fruit
+    for (i = 0; i < FRUIT_MAX; i++) {
+    	if (inside(fruits[i])) {
+	        draw_sprite(buffer, fruits_image[i],
+	        fruits[i]->x- mapxoff, fruits[i]->y - mapyoff);
+	    }
+    }
 
     //draw the player's sprite
 	if (facing == 1) {
@@ -479,6 +542,10 @@ int main (void)
     free(player);
 	destroy_bitmap(buffer);
 	destroy_bitmap(title);
+	for (i = 0; i < FRUIT_MAX; i++) {
+		destroy_bitmap(fruits_image[i]);
+		free(fruits[i]);
+	}
 	destroy_sample(background_music);
 	destroy_sample(click_sound);
 	MapFreeMem();
