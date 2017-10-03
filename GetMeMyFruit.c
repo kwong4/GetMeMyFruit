@@ -16,7 +16,33 @@ BITMAP *grabframe(BITMAP *source,
     return temp;
 }
 
-int collided(int x, int y)
+int inside_box(int x,int y,int left,int top,int right,int bottom)
+{
+    if (x > left && x < right && y > top && y < bottom)
+        return 1;
+    else
+        return 0;
+}
+
+int collided(SPRITE *current, SPRITE *other, int shrink)
+{
+    int wa = current->x + current->width;
+    int ha = current->y + current->height;
+    int wb = other->x + other->width;
+    int hb = other->y + other->height;
+
+    if (inside_box(current->x, current->y, other->x+shrink, other->y+shrink, wb-shrink, hb-shrink) ||
+        inside_box(current->x, ha, other->x+shrink, other->y+shrink, wb-shrink, hb-shrink) ||
+        inside_box(wa, current->y, other->x+shrink, other->y+shrink, wb-shrink, hb-shrink) ||
+        inside_box(wa, ha, other->x+shrink, other->y+shrink, wb-shrink, hb-shrink)) {
+        	return 1;	
+        }
+    else {
+        return 0;
+    }
+}
+
+int map_collided(int x, int y)
 {
     BLKSTR *blockdata;
 	blockdata = MapGetBlock(x/mapblockwidth, y/mapblockheight);
@@ -266,6 +292,7 @@ void setupgame() {
     player->maxframe= PLAYER_MAX_FRAME;
     player->width= player_image[0]->w;
     player->height= player_image[0]->h;
+    player->alive = 1;
     
     //Setup Fruit
 	fruits_image[0] = load_bitmap(ORANGE_SPRITE, NULL);
@@ -286,19 +313,31 @@ void setupgame() {
 	// Setup fruit sprite locations
 	fruits[0]->x = mapblockwidth;
 	fruits[0]->y = mapblockheight * 3;
+	fruits[0]->width = fruits_image[0]->w;
+	fruits[0]->height = fruits_image[0]->h;
 	fruits[0]->data = 0;
+	fruits[0]->alive = 1;
 	
 	fruits[1]->x = mapblockwidth * 3;
 	fruits[1]->y = mapblockheight * 26;
+	fruits[1]->width = fruits_image[1]->w;
+	fruits[1]->height = fruits_image[1]->h;
 	fruits[1]->data = 1;
+	fruits[1]->alive = 1;
 	
 	fruits[2]->x = mapblockwidth * 116;
-	fruits[2]->y = mapblockheight * 3;
+	fruits[2]->y = mapblockheight * 7;
+	fruits[2]->width = fruits_image[2]->w;
+	fruits[2]->height = fruits_image[2]->h;
 	fruits[2]->data = 2;
+	fruits[2]->alive = 1;
 	
 	fruits[3]->x = mapblockwidth * 118;
 	fruits[3]->y = mapblockheight * 26;
+	fruits[3]->width = fruits_image[3]->w;
+	fruits[3]->height = fruits_image[3]->h;
 	fruits[3]->data = 3;
+	fruits[3]->alive = 1;
 	
 }
 
@@ -334,6 +373,9 @@ void update() {
 	//Loop variable
 	int i;
 	
+	// Position variables
+	int x1,y1,x2,y2;
+	
 	// Old coordinates
 	oldpy = player->y; 
     oldpx = player->x;
@@ -341,7 +383,7 @@ void update() {
 	//handle jumping
     if (jump==JUMPIT)
     { 
-        if (!collided(player->x + player->width/2, 
+        if (!map_collided(player->x + player->width/2, 
             player->y + player->height + 5))
             jump = 0; 
     }
@@ -353,11 +395,11 @@ void update() {
     }
 
 	if (jump<0) { 
-        if (collided(player->x + player->width/2, 
+        if (map_collided(player->x + player->width/2, 
             player->y + player->height))
 		{ 
             jump = JUMPIT; 
-            while (collided(player->x + player->width/2, 
+            while (map_collided(player->x + player->width/2, 
                 player->y + player->height))
                 player->y -= 2; 
         } 
@@ -365,11 +407,11 @@ void update() {
 	
 	//check for collided with foreground tiles
 	if (facing == -1) { 
-        if (collided(player->x, player->y + player->height)) 
+        if (map_collided(player->x, player->y + player->height)) 
             player->x = oldpx; 
     }
 	else { 
-        if (collided(player->x + player->width, 
+        if (map_collided(player->x + player->width, 
             player->y + player->height)) 
             player->x = oldpx; 
     }
@@ -426,12 +468,35 @@ void update() {
     //draw foreground tiles
 	MapDrawFG(buffer, mapxoff, mapyoff, 0, 0, WIDTH-1, HEIGHT-1, 0);
 
+	rect(buffer, WIDTH - 156, 1, WIDTH - 4, 41, BLACK);
+	rect(buffer, WIDTH - 155, 2, WIDTH - 5, 40, BLACK);
+	textout_ex(buffer, font, "FRUIT COLLECTED: ", WIDTH - 150, 5, BLACK, -1);
+
 	//draw fruit
     for (i = 0; i < FRUIT_MAX; i++) {
-    	if (inside(fruits[i])) {
-	        draw_sprite(buffer, fruits_image[i],
-	        fruits[i]->x- mapxoff, fruits[i]->y - mapyoff);
-	    }
+    	
+    	if (fruits[i]->alive == 1) {
+    		
+			 //get fruit bounding rectangle
+            x1 = player->x;
+            y1 = player->y;
+            x2 = x1 + player->width;
+            y2 = y1 + player->height;
+
+    		if (inside_box(fruits[i]->x + fruits[i]->width/2, fruits[i]->y + fruits[i]->height/2, x1, y1, x2, y2)) {
+    			fruits[i]->alive = 0;
+    			fruit_collected++;
+    		}
+
+    		if (inside(fruits[i])) {
+		        draw_sprite(buffer, fruits_image[i],
+		        fruits[i]->x - mapxoff, fruits[i]->y - mapyoff);
+	    	}
+    	}
+    	else {
+    		draw_sprite(buffer, fruits_image[i],
+		        WIDTH - 125 + 25 * i, 15);
+    	}
     }
 
     //draw the player's sprite
@@ -528,6 +593,11 @@ int main (void)
 		//update
 		update();
 
+		if (fruit_collected == 4) {
+			win = 1;
+			gameover = 1;	
+		}
+
         //blit the double buffer 
 		vsync();
         acquire_screen();
@@ -535,6 +605,25 @@ int main (void)
         release_screen();
 
 	}
+	// Clear Screen
+    rectfill(screen, 0, 0, WIDTH, HEIGHT, BLACK);
+    
+    // Print final result
+	if (win == 1) {
+		textout_centre_ex(screen, font, "Congratulations! You have collected all the fruit!", WIDTH/2, HEIGHT/2, WHITE, BLACK);
+	}
+	else {
+		textprintf_centre_ex(screen, font, WIDTH/2, HEIGHT/2, WHITE, BLACK, "Sorry you have only collected %i fruit. Please try again!", fruit_collected);
+	}
+
+	textout_centre_ex(screen, font, "Please Press ESC to QUIT!", WIDTH/2, HEIGHT/2 + 20, WHITE, BLACK);
+
+	// Slow down game
+    rest(250);
+    
+    // Wait until user exits game
+    while(!key[KEY_ESC]) {
+	};
 
     for (i = 0; i < PLAYER_MAX_FRAME; i++) {
     	destroy_bitmap(player_image[i]);

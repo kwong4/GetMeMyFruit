@@ -69,10 +69,12 @@ int jump = JUMPIT;
 int mapxoff, mapyoff;
 int oldpx, oldpy;
 int gameover = 0;
+int win = 0;
 int sound = 1;
 int waitcount = 0;
 int selection = 0;
 int max_selection = 2;
 int hardmode = 0;
+int fruit_collected = 0;
 
 #endif
