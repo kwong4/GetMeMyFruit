@@ -1,3 +1,5 @@
+// Author: Kevin Wong
+
 #include <stdio.h>
 #include <allegro.h>
 #include "mappyal.h"
@@ -15,8 +17,7 @@ BITMAP *grabframe(BITMAP *source, int width, int height, int startx, int starty,
 }
 
 // Point collision with bounding box
-int inside_box(int x,int y,int left,int top,int right,int bottom)
-{
+int inside_box(int x,int y,int left,int top,int right,int bottom) {
     if (x > left && x < right && y > top && y < bottom)
         return 1;
     else
@@ -24,8 +25,7 @@ int inside_box(int x,int y,int left,int top,int right,int bottom)
 }
 
 // Sprite collision with shrink and bounding box
-int collided(SPRITE *current, SPRITE *other, int shrink)
-{
+int collided(SPRITE *current, SPRITE *other, int shrink) {
     int wa = current->x + current->width;
     int ha = current->y + current->height;
     int wb = other->x + other->width;
@@ -43,8 +43,7 @@ int collided(SPRITE *current, SPRITE *other, int shrink)
 }
 
 // Mappy Collision detection
-int map_collided(int x, int y)
-{
+int map_collided(int x, int y) {
     BLKSTR *blockdata;
 	blockdata = MapGetBlock(x/mapblockwidth, y/mapblockheight);
 	return blockdata->tl;
@@ -238,6 +237,12 @@ void setupscreen() {
 	// Load sound files
 	background_music = load_sample(BACKGROUND_SOUND);
 	click_sound = load_sample(CLICK_SOUND);
+	jump_sound = load_sample(JUMP_SOUND);
+	fruit_collect_sound = load_sample(FRUIT_COLLECT_SOUND);
+	enemy_die_sound = load_sample(ENEMY_SOUND);
+	game_over_sound = load_sample(GAME_OVER);
+	splash_sound = load_sample(SPLASH_SOUND);
+	game_win_sound = load_sample(GAME_WIN);
 	
 	//install a digital sound driver
     if (install_sound(DIGI_AUTODETECT, MIDI_NONE, "") != 0) {
@@ -246,7 +251,7 @@ void setupscreen() {
     }
     
     // Check if sound files loaded
-    if (!background_music || !click_sound) {
+    if (!background_music || !click_sound || !jump_sound || !fruit_collect_sound || !enemy_die_sound || !game_over_sound || !splash_sound || !game_win_sound) {
     	allegro_message("Error reading wave files");
     	return;
     }
@@ -531,6 +536,7 @@ void update_enemies() {
     	
 		// Get enemy bounding rectangle
 		if (inside_box(green_enemy->x + green_enemy->width/2, green_enemy->y + green_enemy->height/2, x1, y1, x2, y2)) {
+			play_sample(enemy_die_sound, 128, 128, 1000, FALSE);
 			player->alive = 0;
 			gameover = 1;
 		}
@@ -555,6 +561,7 @@ void update_enemies() {
     	
 		//get enemy bounding rectangle
 		if (inside_box(red_enemy->x + red_enemy->width/2, red_enemy->y + red_enemy->height/2, x1, y1, x2, y2)) {
+			play_sample(enemy_die_sound, 128, 128, 1000, FALSE);
 			player->alive = 0;
 			gameover = 1;
 		}
@@ -579,6 +586,7 @@ void update_enemies() {
     		
 		//get enemy bounding rectangle
 		if (inside_box(orange_enemy->x + orange_enemy->width/2, orange_enemy->y + orange_enemy->height/2, x1, y1, x2, y2)) {
+			play_sample(enemy_die_sound, 128, 128, 1000, FALSE);
 			player->alive = 0;
 			gameover = 1;
 		}
@@ -603,6 +611,7 @@ void update_enemies() {
     		
 		//get enemy bounding rectangle
 		if (inside_box(blue_enemy->x + blue_enemy->width/2, blue_enemy->y + blue_enemy->height/2, x1, y1, x2, y2)) {
+			play_sample(enemy_die_sound, 128, 128, 1000, FALSE);
 			player->alive = 0;
 			gameover = 1;
 		}
@@ -711,7 +720,8 @@ void update() {
     if (player->x > (mapwidth * mapblockwidth - player->width)) {
     	player->x = (mapwidth * mapblockwidth - player->width);
     }
-    if ((player->y + player->height) > (mapheight * mapblockheight)) {
+    if ((player->y + player->height) > (mapheight * mapblockheight - (mapblockheight / 2))) {
+    	play_sample(splash_sound, 128, 128, 1000, FALSE);
     	gameover = 1;
     	return;
     }
@@ -755,6 +765,7 @@ void update() {
     		
 			//get fruit bounding rectangl
     		if (inside_box(fruits[i]->x + fruits[i]->width/2, fruits[i]->y + fruits[i]->height/2, x1, y1, x2, y2)) {
+    			play_sample(fruit_collect_sound, 128, 128, 1000, FALSE);
     			fruits[i]->alive = 0;
     			fruit_collected++;
     		}
@@ -833,6 +844,7 @@ void getinput() {
 	
     if (key[KEY_SPACE]) {
     	if (jump==JUMPIT) {
+    		play_sample(jump_sound, 128, 128, 1000, FALSE);
     		jump = 30;
     	}
 	}
@@ -890,11 +902,16 @@ int main(void) {
 	// Clear Screen
     rectfill(screen, 0, 0, WIDTH, HEIGHT, BLACK);
     
-    // Print final result
+    // Stop background
+    stop_sample(background_music);
+    
+    // Print final result w/ Sound
 	if (win == 1) {
+		play_sample(game_win_sound, 128, 128, 1000, FALSE);
 		textout_centre_ex(screen, font, "Congratulations! You have collected all the fruit!", WIDTH/2, HEIGHT/2, WHITE, BLACK);
 	}
 	else {
+		play_sample(game_over_sound, 128, 128, 1000, FALSE);
 		textprintf_centre_ex(screen, font, WIDTH/2, HEIGHT/2, WHITE, BLACK, "Sorry you have only collected %i fruit. Please try again!", fruit_collected);
 	}
 
@@ -936,6 +953,12 @@ int main(void) {
 	
 	destroy_sample(background_music);
 	destroy_sample(click_sound);
+	destroy_sample(jump_sound);
+	destroy_sample(fruit_collect_sound);
+	destroy_sample(enemy_die_sound);
+	destroy_sample(game_over_sound);
+	destroy_sample(splash_sound);
+	destroy_sample(game_win_sound);
 	
 	MapFreeMem();
 	allegro_exit();

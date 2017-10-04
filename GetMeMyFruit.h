@@ -1,3 +1,5 @@
+// Author: Kevin Wong
+
 #ifndef _GETMEMYFRUIT_H
 #define _GETMEMYFRUIT_H
 
@@ -26,6 +28,12 @@
 #define GETMEMYFRUIT "sprites/GetMeMyFruit.bmp"
 #define BACKGROUND_SOUND "sounds/background.wav"
 #define CLICK_SOUND "sounds/click.wav"
+#define SPLASH_SOUND "sounds/splash.wav"
+#define JUMP_SOUND "sounds/boing.wav"
+#define FRUIT_COLLECT_SOUND "sounds/fanfare.wav"
+#define ENEMY_SOUND "sounds/pluck.wav"
+#define GAME_OVER "sounds/shut_off.wav"
+#define GAME_WIN "sounds/yay.wav"
 #define ENEMY1 "sprites/enemies1.bmp"
 #define ENEMY2 "sprites/enemies2.bmp"
 #define ENEMY3 "sprites/enemies3.bmp"
@@ -75,6 +83,60 @@ typedef struct SPRITE
     int data;
 }SPRITE;
 
+// Functions
+
+// Tile Grabber
+BITMAP *grabframe(BITMAP *source, int width, int height, int startx, int starty, int columns, int frame);
+
+// Point collision with bounding box
+int inside_box(int x,int y,int left,int top,int right,int bottom);
+
+// Sprite collision with shrink and bounding box
+int collided(SPRITE *current, SPRITE *other, int shrink);
+
+// Mappy Collision detection
+int map_collided(int x, int y);
+
+// Check if sprite inside of screen
+int inside(SPRITE* sprite);
+
+// Print Insturction screen
+void instructions();
+
+// Get Game menu input
+int getmenuinput();
+
+// Print the welcome screen menu
+void welcome_screen();
+
+// Draw initial start screen instructions
+void draw_startscreen();
+
+// Setup initial files
+void setupscreen();
+
+// Setup game
+void setupgame();
+
+// Player walking position and animation update
+void walk(int dir);
+
+// Enemy walking position and animation update
+void walk_enemies(SPRITE *enemy);
+
+// Update Enemies
+void update_enemies();
+
+// Player wait animation
+void wait();
+
+// General update function
+void update();
+
+// Get game input from user
+void getinput();
+
+
 //declare the bitmaps and sprites
 BITMAP *player_image[5];
 SPRITE *player;
@@ -93,6 +155,12 @@ BITMAP *temp;
 BITMAP *title;
 SAMPLE *background_music;
 SAMPLE *click_sound;
+SAMPLE *jump_sound;
+SAMPLE *fruit_collect_sound;
+SAMPLE *enemy_die_sound;
+SAMPLE *game_over_sound;
+SAMPLE *splash_sound;
+SAMPLE *game_win_sound;
 int facing = 0;
 int jump = JUMPIT;
 int mapxoff, mapyoff;
@@ -106,5 +174,6 @@ int max_selection = 2;
 int hardmode = 0;
 int fruit_collected = 0;
 int sound_cooldown = 0;
+int menu_cooldown = 0;
 
 #endif
