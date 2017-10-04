@@ -58,6 +58,7 @@
 #define WAITCOUNT_MAX 5
 #define TOP_BUFFER 10
 #define FRUIT_CONSTANT 20
+#define COOLDOWN 20
 
 //define the sprite structure
 typedef struct SPRITE
@@ -104,5 +105,6 @@ int selection = 0;
 int max_selection = 2;
 int hardmode = 0;
 int fruit_collected = 0;
+int sound_cooldown = 0;
 
 #endif

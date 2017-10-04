@@ -711,9 +711,9 @@ void update() {
     if (player->x > (mapwidth * mapblockwidth - player->width)) {
     	player->x = (mapwidth * mapblockwidth - player->width);
     }
-    if (player->y > (mapheight * mapblockheight + player->height)) {
+    if ((player->y + player->height) > (mapheight * mapblockheight)) {
     	gameover = 1;
-    	exit(0);
+    	return;
     }
     if (player->y < 0) {
     	player->y = 0;	
@@ -786,6 +786,11 @@ void update() {
             (player->x-mapxoff), (player->y-mapyoff));
         }    
     }
+    
+    // Update sound cooldown
+    if (sound_cooldown > 0) {
+    	sound_cooldown--;
+    }
 }
 
 // Get game input from user
@@ -793,7 +798,8 @@ void getinput() {
 	
     //hit ESC to quit
     if (key[KEY_ESC]) {
-		gameover = 1;
+		allegro_exit();
+		exit(0);
 	}
 	
 	// Instruction screen
@@ -803,15 +809,17 @@ void getinput() {
 	
 	// Background music toggle
 	if (key[KEY_LCONTROL] && key[KEY_M]) {
-		if (sound == 1) {
-			sound = 0;
-			stop_sample(background_music);
+		if (sound_cooldown == 0) {
+			sound_cooldown = COOLDOWN;
+			if (sound == 1) {
+				sound = 0;
+				stop_sample(background_music);
+			}
+			else {
+				sound = 1;
+				play_sample(background_music, 128, 128, 1000, TRUE);
+			}
 		}
-		else {
-			sound = 1;
-			play_sample(background_music, 128, 128, 1000, TRUE);
-		}
-		rest(20);
 	}
     
     //ARROW KEYS AND SPACE BAR CONTROL
@@ -831,6 +839,9 @@ void getinput() {
 }
 
 int main(void) {
+
+	// Looping variable
+	int i;
 
 	//initialize Allegro
     allegro_init(); 
@@ -873,6 +884,7 @@ int main(void) {
 		blit(buffer, screen, 0, 0, 0, 0, WIDTH-1, HEIGHT-1);
         release_screen();
 
+		rest(10);
 	}
 	
 	// Clear Screen
