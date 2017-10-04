@@ -3,19 +3,18 @@
 #include "mappyal.h"
 #include "GetMeMyFruit.h"
 
-//tile grabber
-BITMAP *grabframe(BITMAP *source, 
-                  int width, int height, 
-                  int startx, int starty, 
-                  int columns, int frame)
-{
+// Tile Grabber
+BITMAP *grabframe(BITMAP *source, int width, int height, int startx, int starty, int columns, int frame) {
+	
     BITMAP *temp = create_bitmap(width,height);
     int x = startx + (frame % columns) * width;
     int y = starty + (frame / columns) * height;
-    blit(source,temp,x,y,0,0,width,height);
+    blit(source, temp, x, y, 0, 0, width, height);
+    
     return temp;
 }
 
+// Point collision with bounding box
 int inside_box(int x,int y,int left,int top,int right,int bottom)
 {
     if (x > left && x < right && y > top && y < bottom)
@@ -24,6 +23,7 @@ int inside_box(int x,int y,int left,int top,int right,int bottom)
         return 0;
 }
 
+// Sprite collision with shrink and bounding box
 int collided(SPRITE *current, SPRITE *other, int shrink)
 {
     int wa = current->x + current->width;
@@ -42,6 +42,7 @@ int collided(SPRITE *current, SPRITE *other, int shrink)
     }
 }
 
+// Mappy Collision detection
 int map_collided(int x, int y)
 {
     BLKSTR *blockdata;
@@ -49,8 +50,10 @@ int map_collided(int x, int y)
 	return blockdata->tl;
 }
 
+// Check if sprite inside of screen
 int inside(SPRITE* sprite) {
-	//is sprite visible on screen?
+	
+	//Is sprite visible on screen?
     if (sprite->y > mapyoff - FRUIT_CONSTANT && sprite->y < mapyoff + HEIGHT + FRUIT_CONSTANT)
     {
     	if (sprite->x > mapxoff - FRUIT_CONSTANT && sprite->x < mapxoff + WIDTH + FRUIT_CONSTANT) {
@@ -60,7 +63,7 @@ int inside(SPRITE* sprite) {
     return 0;
 }
 
-// Print insturction screen
+// Print Insturction screen
 void instructions() {
 	
 	// Clear screen
@@ -215,16 +218,17 @@ void setupscreen() {
 	// Error variable
     int ret;
 	
-    //set video mode    
+    // Set video mode    
     set_color_depth(16);
     
+    // Graphics Error checking
     ret = set_gfx_mode(MODE, WIDTH, HEIGHT, 0, 0);
     if (ret != 0) {
 	    allegro_message(allegro_error);
 	    return;
 	}
 	
-	//load title screen
+	// Load title screen w/ Error checking
 	title = load_bitmap(GETMEMYFRUIT, NULL);
 	if (!title) {
 		allegro_message("Error loading title screen");
@@ -270,7 +274,7 @@ void setupgame() {
 	// Temporary variables
 	BITMAP *temp;
 	
-	//Play background music
+	// Play Background music
 	play_sample(background_music, 128, 128, 1000, TRUE);
 	
 	//Setup Player
@@ -286,6 +290,7 @@ void setupgame() {
 		return;
 	}
 
+	// Player Sprite Setup
     player = malloc(sizeof(SPRITE));
     player->x = START_POINT_X;
     player->y = START_POINT_Y;
@@ -297,7 +302,7 @@ void setupgame() {
     player->height= player_image[0]->h;
     player->alive = 1;
     
-    //Setup Fruit
+    // Setup Fruit
 	fruits_image[0] = load_bitmap(ORANGE_SPRITE, NULL);
 	fruits_image[1] = load_bitmap(WATERMELON_SPRITE, NULL);
 	fruits_image[2] = load_bitmap(APPLE_SPRITE, NULL);
@@ -309,6 +314,7 @@ void setupgame() {
 		return;
 	}
 	
+	// Fruit allocation
 	for (i = 0; i < FRUIT_MAX; i++) {
 		fruits[i] = malloc(sizeof(SPRITE));	
 	}
@@ -351,6 +357,7 @@ void setupgame() {
 		return;
 	}
 	
+	// Grabbing sprite frames
     for (i = 0; i < 6; i++) {
 	    green_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
     	
@@ -366,6 +373,7 @@ void setupgame() {
 		return;
 	}
 	
+	// Grabbing sprite frames
     for (i = 0; i < 6; i++) {
 	    orange_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
     }
@@ -380,6 +388,7 @@ void setupgame() {
 		return;
 	}
 	
+	// Grabbing sprite frames
     for (i = 0; i < 6; i++) {
 	    red_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
     }
@@ -394,6 +403,7 @@ void setupgame() {
 		return;
 	}
 	
+	// Grabbing sprite frames
     for (i = 0; i < 7; i++) {
 	    blue_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
     }
@@ -457,9 +467,14 @@ void setupgame() {
     blue_enemy->alive = 1;
 }
 
+// Player walking position and animation update
 void walk(int dir) {
+	
+	// Find direction and move accordingly
 	facing = dir; 
     player->x+= 2 * dir; 
+    
+    // Animate Player w/ Delay
     if (++player->framecount > player->framedelay) {
     	player->framecount=0;
     	if (player->curframe > WALKFRAME_MAX || player->curframe < WALKFRAME_MIN) {
@@ -471,7 +486,10 @@ void walk(int dir) {
     }
 }
 
+// Enemy walking position and animation update
 void walk_enemies(SPRITE *enemy) {
+	
+	// Check if speed should be fast or not
 	if (hardmode == 1) {
 		enemy->x+= HARD_MODE * enemy->dir; 
 	}
@@ -479,10 +497,12 @@ void walk_enemies(SPRITE *enemy) {
 		enemy->x+= EASY_MODE * enemy->dir; 
 	}
     
+    // Turning point of enemy movement
     if (enemy->x > enemy->max_x || enemy->x < enemy->min_x) {
     	enemy->dir = enemy->dir * -1;
     }
     
+    // Frame delay animation
     if (++enemy->framecount > enemy->framedelay) {
     	enemy->framecount=0;
     	if (++enemy->curframe > enemy->maxframe) {
@@ -491,6 +511,7 @@ void walk_enemies(SPRITE *enemy) {
     }
 }
 
+// Update Enemies
 void update_enemies() {
 	
 	// Position variables
@@ -505,14 +526,16 @@ void update_enemies() {
 	// Draw enemies
     if (green_enemy->alive == 1) {
     		
+    	// Update enemy position and animation
     	walk_enemies(green_enemy);
     	
-		//get enemy bounding rectangle
+		// Get enemy bounding rectangle
 		if (inside_box(green_enemy->x + green_enemy->width/2, green_enemy->y + green_enemy->height/2, x1, y1, x2, y2)) {
 			player->alive = 0;
 			gameover = 1;
 		}
 
+		// Check if within screen to draw
 		if (inside(green_enemy)) {
 			if (green_enemy->dir == -1) {
 				draw_sprite(buffer, green_enemy_image[green_enemy->curframe],
@@ -527,6 +550,7 @@ void update_enemies() {
     	
     if (red_enemy->alive == 1) {
     		
+    	// Update enemy position and animation
     	walk_enemies(red_enemy);
     	
 		//get enemy bounding rectangle
@@ -535,6 +559,7 @@ void update_enemies() {
 			gameover = 1;
 		}
 
+		// Check if within screen to draw
 		if (inside(red_enemy)) {
 			if (red_enemy->dir == -1) {
 		        draw_sprite(buffer, red_enemy_image[red_enemy->curframe],
@@ -549,6 +574,7 @@ void update_enemies() {
 	
 	if (orange_enemy->alive == 1) {
     		
+    	// Update enemy position and animation
     	walk_enemies(orange_enemy);
     		
 		//get enemy bounding rectangle
@@ -557,6 +583,7 @@ void update_enemies() {
 			gameover = 1;
 		}
 
+		// Check if within screen to draw
 		if (inside(orange_enemy)) {
 			if (orange_enemy->dir == -1) {
 	        	draw_sprite(buffer, orange_enemy_image[orange_enemy->curframe],
@@ -571,6 +598,7 @@ void update_enemies() {
 	
 	if (blue_enemy->alive == 1) {
     		
+    	// Update enemy position and animation
     	walk_enemies(blue_enemy);
     		
 		//get enemy bounding rectangle
@@ -579,6 +607,7 @@ void update_enemies() {
 			gameover = 1;
 		}
 
+		// Check if within screen to draw
 		if (inside(blue_enemy)) {
 			if (blue_enemy->dir == -1) {
 		        draw_sprite(buffer, blue_enemy_image[blue_enemy->curframe],
@@ -592,9 +621,11 @@ void update_enemies() {
 	}
 }
 
+// Player wait animation
 void wait() {
-	if (++player->framecount > player->framedelay)
-    {
+	
+	// Update Player animation w/ delay
+	if (++player->framecount > player->framedelay) {
     	player->framecount=0;
 		if (player->curframe > WAITFRAME_MAX || player->curframe < WAITFRAME_MIN) {
 			player->curframe = 	WAITFRAME_MIN;
@@ -605,9 +636,10 @@ void wait() {
 	}
 }
 
+// General update function
 void update() {
 	
-	//Loop variable
+	// Loop variable
 	int i;
 	
 	// Position variables
@@ -617,7 +649,7 @@ void update() {
 	oldpy = player->y; 
     oldpx = player->x;
 	
-	//handle jumping
+	// Handle jumping
     if (jump==JUMPIT)
     { 
         if (!map_collided(player->x + player->width/2, 
@@ -642,7 +674,7 @@ void update() {
         } 
     }
 	
-	//check for collided with foreground tiles
+	// Check for collided with foreground tiles
 	if (facing == -1) { 
         if (map_collided(player->x, player->y + player->height)) 
             player->x = oldpx; 
@@ -653,12 +685,12 @@ void update() {
             player->x = oldpx; 
     }
 	
-    //update the map scroll position
+    // Update the map scroll position
 	mapxoff = player->x + player->width/2 - WIDTH/2 + 10;
 	mapyoff = player->y + player->height/2 - HEIGHT/2 + 10;
 
 
-    //avoid moving beyond the map edge
+    // Avoid moving beyond the map edge
 	if (mapxoff < 0) {
 		mapxoff = 0;
 	}
@@ -672,7 +704,7 @@ void update() {
         mapyoff = mapheight * mapblockheight - HEIGHT;
     }
     
-    //avoid player moving beyoard map edge (left and right)
+    // Avoid player moving beyoard map edge (left and right)
     if (player->x < 0) {
     	player->x = 0;	
     }
@@ -699,12 +731,13 @@ void update() {
 		waitcount = 0;	
 	}
 
-    //draw the background tiles
+    // Draw the background tiles
 	MapDrawBG(buffer, mapxoff, mapyoff, 0, 0, WIDTH-1, HEIGHT-1);
 
-    //draw foreground tiles
+    // Draw foreground tiles
 	MapDrawFG(buffer, mapxoff, mapyoff, 0, 0, WIDTH-1, HEIGHT-1, 0);
 
+	// Fruit Collection Status
 	rect(buffer, WIDTH - 156, 1, WIDTH - 4, 41, BLACK);
 	rect(buffer, WIDTH - 155, 2, WIDTH - 5, 40, BLACK);
 	textout_ex(buffer, font, "FRUIT COLLECTED: ", WIDTH - 150, 5, BLACK, -1);
@@ -715,7 +748,7 @@ void update() {
     x2 = x1 + player->width;
     y2 = y1 + player->height;
 
-	//draw fruit
+	// Draw fruit
     for (i = 0; i < FRUIT_MAX; i++) {
     	
     	if (fruits[i]->alive == 1) {
@@ -740,7 +773,7 @@ void update() {
     // Update enemies
     update_enemies();
 
-    //draw the player's sprite
+    // Draw the player's sprite
 	if (facing == 1) {
 		if (player->y > player->width * -1) {
 			draw_sprite(buffer, player_image[player->curframe], 
@@ -797,13 +830,7 @@ void getinput() {
 	}
 }
 
-int main (void)
-{
-    int mapxoff, mapyoff;
-    int oldpy, oldpx;
-    int facing = 0;
-    int jump = JUMPIT;
-    int i;
+int main(void) {
 
 	//initialize Allegro
     allegro_init(); 
@@ -822,30 +849,32 @@ int main (void)
 
 	setupgame();
 
-    //main loop
+    // Main loop
 	while (!gameover)
 	{
 
-		//check for keypresses
+		// Check for keypresses
         if (keypressed()) {
             getinput();
 		}
 
-		//update
+		// Update
 		update();
 
+		// Check win condition
 		if (fruit_collected == 4) {
 			win = 1;
 			gameover = 1;	
 		}
 
-        //blit the double buffer 
+        // Blit the double buffer 
 		vsync();
         acquire_screen();
 		blit(buffer, screen, 0, 0, 0, 0, WIDTH-1, HEIGHT-1);
         release_screen();
 
 	}
+	
 	// Clear Screen
     rectfill(screen, 0, 0, WIDTH, HEIGHT, BLACK);
     
@@ -866,29 +895,36 @@ int main (void)
     while(!key[KEY_ESC]) {
 	};
 
-    for (i = 0; i < PLAYER_MAX_FRAME; i++) {
-    	destroy_bitmap(player_image[i]);
-    } 
+	// Cleanup
     free(player);
+    free(red_enemy);
+	free(orange_enemy);
+	free(blue_enemy);
+	free(green_enemy);
+    
 	destroy_bitmap(buffer);
 	destroy_bitmap(title);
+	destroy_bitmap(blue_enemy_image[6]);
+	
+	for (i = 0; i < PLAYER_MAX_FRAME; i++) {
+    	destroy_bitmap(player_image[i]);
+    } 
+	
 	for (i = 0; i < FRUIT_MAX; i++) {
 		destroy_bitmap(fruits_image[i]);
 		free(fruits[i]);
 	}
+	
 	for (i = 0; i < 6; i++) {
 		destroy_bitmap(orange_enemy_image[i]);
 		destroy_bitmap(red_enemy_image[i]);
 		destroy_bitmap(blue_enemy_image[i]);
 		destroy_bitmap(green_enemy_image[i]);
 	}
-	free(red_enemy);
-	free(orange_enemy);
-	free(blue_enemy);
-	free(green_enemy);
-	destroy_bitmap(blue_enemy_image[6]);
+	
 	destroy_sample(background_music);
 	destroy_sample(click_sound);
+	
 	MapFreeMem();
 	allegro_exit();
 	return 0;
