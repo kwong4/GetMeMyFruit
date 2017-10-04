@@ -84,9 +84,9 @@ void instructions() {
     textout_ex(screen, font, "   Use the LEFT key to move LEFT", WIDTH/8, HEIGHT/2 + 70, YELLOW, BLACK);
     textout_ex(screen, font, "   Use the RIGHT key to move RIGHT", WIDTH/8, HEIGHT/2 + 80, YELLOW, BLACK);
     textout_ex(screen, font, "2. Use the SPACE bar key to JUMP", WIDTH/8, HEIGHT/2 + 90, WHITE, BLACK);
-    textout_ex(screen, font, "4. Press Ctrl + h to bring up the instructions at any time!", WIDTH/8, HEIGHT/2 + 120, WHITE, BLACK);
-    textout_ex(screen, font, "5. Press Ctrl + m to toggle the background music at any time!", WIDTH/8, HEIGHT/2 + 130, WHITE, BLACK);
-    textout_ex(screen, font, "6. Press Esc to exit the game!", WIDTH/8, HEIGHT/2 + 140, WHITE, BLACK);
+    textout_ex(screen, font, "3. Press Ctrl + h to bring up the instructions at any time!", WIDTH/8, HEIGHT/2 + 100, WHITE, BLACK);
+    textout_ex(screen, font, "4. Press Ctrl + m to toggle the background music at any time!", WIDTH/8, HEIGHT/2 + 110, WHITE, BLACK);
+    textout_ex(screen, font, "5. Press Esc to exit the game!", WIDTH/8, HEIGHT/2 + 120, WHITE, BLACK);
     
     // ENTER to return
     textout_centre_ex(screen, font, "Press ENTER to return", WIDTH/2, HEIGHT/2 + 200, WHITE, BLACK);
@@ -403,9 +403,12 @@ void setupgame() {
 	green_enemy = malloc(sizeof(SPRITE));
     green_enemy->x = ENEMY1_START_X;
     green_enemy->y = ENEMY1_START_Y;
+    green_enemy->min_x = ENEMY1_START_X;
+    green_enemy->max_x = ENEMY1_END_X;
+    green_enemy->dir = 1;
     green_enemy->curframe= 0;
     green_enemy->framecount= 0;
-    green_enemy->framedelay= FRAME_DELAY;
+    green_enemy->framedelay= FRAME_DELAY_ENEMY;
     green_enemy->maxframe= 5;
     green_enemy->width= green_enemy_image[0]->w;
     green_enemy->height= green_enemy_image[0]->h;
@@ -414,31 +417,40 @@ void setupgame() {
     orange_enemy = malloc(sizeof(SPRITE));
     orange_enemy->x = ENEMY2_START_X;
     orange_enemy->y = ENEMY2_START_Y;
+    orange_enemy->min_x = ENEMY2_START_X;
+    orange_enemy->max_x = ENEMY2_END_X;
+    orange_enemy->dir = 1;
     orange_enemy->curframe= 0;
     orange_enemy->framecount= 0;
-    orange_enemy->framedelay= FRAME_DELAY;
+    orange_enemy->framedelay= FRAME_DELAY_ENEMY;
     orange_enemy->maxframe= 5;
     orange_enemy->width= orange_enemy_image[0]->w;
     orange_enemy->height= orange_enemy_image[0]->h;
     orange_enemy->alive = 1;
     
     red_enemy = malloc(sizeof(SPRITE));
-    red_enemy->x = ENEMY3_START_X;
+    red_enemy->x = ENEMY3_END_X;
     red_enemy->y = ENEMY3_START_Y;
+    red_enemy->min_x = ENEMY3_START_X;
+    red_enemy->max_x = ENEMY3_END_X;
+    red_enemy->dir = -1;
     red_enemy->curframe= 0;
     red_enemy->framecount= 0;
-    red_enemy->framedelay= FRAME_DELAY;
+    red_enemy->framedelay= FRAME_DELAY_ENEMY;
     red_enemy->maxframe= 5;
     red_enemy->width= red_enemy_image[0]->w;
     red_enemy->height= red_enemy_image[0]->h;
     red_enemy->alive = 1;
     
     blue_enemy = malloc(sizeof(SPRITE));
-    blue_enemy->x = ENEMY4_START_X;
+    blue_enemy->x = ENEMY4_END_X;
     blue_enemy->y = ENEMY4_START_Y;
+    blue_enemy->min_x = ENEMY4_START_X;
+    blue_enemy->max_x = ENEMY4_END_X;
+    blue_enemy->dir = -1;
     blue_enemy->curframe= 0;
     blue_enemy->framecount= 0;
-    blue_enemy->framedelay= FRAME_DELAY;
+    blue_enemy->framedelay= FRAME_DELAY_ENEMY;
     blue_enemy->maxframe= 5;
     blue_enemy->width= blue_enemy_image[0]->w;
     blue_enemy->height= blue_enemy_image[0]->h;
@@ -448,15 +460,136 @@ void setupgame() {
 void walk(int dir) {
 	facing = dir; 
     player->x+= 2 * dir; 
-    if (++player->framecount > player->framedelay)
-    {
+    if (++player->framecount > player->framedelay) {
     	player->framecount=0;
     	if (player->curframe > WALKFRAME_MAX || player->curframe < WALKFRAME_MIN) {
 			player->curframe = 	WALKFRAME_MIN;
 		}
-        if (++player->curframe > WALKFRAME_MAX)
-            player->curframe=WALKFRAME_MIN;
+        if (++player->curframe > WALKFRAME_MAX) {
+        	player->curframe=WALKFRAME_MIN;
+        }
     }
+}
+
+void walk_enemies(SPRITE *enemy) {
+	if (hardmode == 1) {
+		enemy->x+= HARD_MODE * enemy->dir; 
+	}
+	else {
+		enemy->x+= EASY_MODE * enemy->dir; 
+	}
+    
+    if (enemy->x > enemy->max_x || enemy->x < enemy->min_x) {
+    	enemy->dir = enemy->dir * -1;
+    }
+    
+    if (++enemy->framecount > enemy->framedelay) {
+    	enemy->framecount=0;
+    	if (++enemy->curframe > enemy->maxframe) {
+			enemy->curframe = 0;
+		}
+    }
+}
+
+void update_enemies() {
+	
+	// Position variables
+	int x1,y1,x2,y2;
+	
+	// Player coordinates
+	x1 = player->x;
+    y1 = player->y;
+    x2 = x1 + player->width;
+    y2 = y1 + player->height;
+	
+	// Draw enemies
+    if (green_enemy->alive == 1) {
+    		
+    	walk_enemies(green_enemy);
+    	
+		//get enemy bounding rectangle
+		if (inside_box(green_enemy->x + green_enemy->width/2, green_enemy->y + green_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(green_enemy)) {
+			if (green_enemy->dir == -1) {
+				draw_sprite(buffer, green_enemy_image[green_enemy->curframe],
+	        		green_enemy->x - mapxoff, green_enemy->y - mapyoff);
+			}
+			else {
+				draw_sprite_h_flip(buffer, green_enemy_image[green_enemy->curframe],
+	        		green_enemy->x - mapxoff, green_enemy->y - mapyoff);
+			}
+    	}
+	}
+    	
+    if (red_enemy->alive == 1) {
+    		
+    	walk_enemies(red_enemy);
+    	
+		//get enemy bounding rectangle
+		if (inside_box(red_enemy->x + red_enemy->width/2, red_enemy->y + red_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(red_enemy)) {
+			if (red_enemy->dir == -1) {
+		        draw_sprite(buffer, red_enemy_image[red_enemy->curframe],
+		        	red_enemy->x - mapxoff, red_enemy->y - mapyoff);
+	    	}
+	    	else {
+	    		draw_sprite_h_flip(buffer, red_enemy_image[red_enemy->curframe],
+		        	red_enemy->x - mapxoff, red_enemy->y - mapyoff);
+	    	}
+    	}
+	}
+	
+	if (orange_enemy->alive == 1) {
+    		
+    	walk_enemies(orange_enemy);
+    		
+		//get enemy bounding rectangle
+		if (inside_box(orange_enemy->x + orange_enemy->width/2, orange_enemy->y + orange_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(orange_enemy)) {
+			if (orange_enemy->dir == -1) {
+	        	draw_sprite(buffer, orange_enemy_image[orange_enemy->curframe],
+	        		orange_enemy->x - mapxoff, orange_enemy->y - mapyoff);
+	    	}
+	    	else {
+	    		draw_sprite_h_flip(buffer, orange_enemy_image[orange_enemy->curframe],
+	        		orange_enemy->x - mapxoff, orange_enemy->y - mapyoff);
+	    	}
+    	}
+	}
+	
+	if (blue_enemy->alive == 1) {
+    		
+    	walk_enemies(blue_enemy);
+    		
+		//get enemy bounding rectangle
+		if (inside_box(blue_enemy->x + blue_enemy->width/2, blue_enemy->y + blue_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(blue_enemy)) {
+			if (blue_enemy->dir == -1) {
+		        draw_sprite(buffer, blue_enemy_image[blue_enemy->curframe],
+		        	blue_enemy->x - mapxoff, blue_enemy->y - mapyoff);
+			}
+			else {
+				draw_sprite_h_flip(buffer, blue_enemy_image[blue_enemy->curframe],
+		        	blue_enemy->x - mapxoff, blue_enemy->y - mapyoff);
+			}
+    	}
+	}
 }
 
 void wait() {
@@ -604,62 +737,8 @@ void update() {
     	}
     }
     
-    // Draw enemies
-    if (green_enemy->alive == 1) {
-    		
-			//get enemy bounding rectangle
-    		if (inside_box(green_enemy->x + green_enemy->width/2, green_enemy->y + green_enemy->height/2, x1, y1, x2, y2)) {
-    			player->alive = 0;
-    			gameover = 1;
-    		}
-
-    		if (inside(green_enemy)) {
-		        draw_sprite(buffer, green_enemy_image[green_enemy->curframe],
-		        green_enemy->x - mapxoff, green_enemy->y - mapyoff);
-	    	}
-    	}
-    	
-    if (red_enemy->alive == 1) {
-    		
-		//get enemy bounding rectangle
-		if (inside_box(red_enemy->x + red_enemy->width/2, red_enemy->y + red_enemy->height/2, x1, y1, x2, y2)) {
-			player->alive = 0;
-			gameover = 1;
-		}
-
-		if (inside(red_enemy)) {
-	        draw_sprite(buffer, red_enemy_image[red_enemy->curframe],
-	        red_enemy->x - mapxoff, red_enemy->y - mapyoff);
-    	}
-	}
-	
-	if (orange_enemy->alive == 1) {
-    		
-		//get enemy bounding rectangle
-		if (inside_box(orange_enemy->x + orange_enemy->width/2, orange_enemy->y + orange_enemy->height/2, x1, y1, x2, y2)) {
-			player->alive = 0;
-			gameover = 1;
-		}
-
-		if (inside(orange_enemy)) {
-	        draw_sprite(buffer, orange_enemy_image[orange_enemy->curframe],
-	        orange_enemy->x - mapxoff, orange_enemy->y - mapyoff);
-    	}
-	}
-	
-	if (blue_enemy->alive == 1) {
-    		
-		//get enemy bounding rectangle
-		if (inside_box(blue_enemy->x + blue_enemy->width/2, blue_enemy->y + blue_enemy->height/2, x1, y1, x2, y2)) {
-			player->alive = 0;
-			gameover = 1;
-		}
-
-		if (inside(blue_enemy)) {
-	        draw_sprite(buffer, blue_enemy_image[blue_enemy->curframe],
-	        blue_enemy->x - mapxoff, blue_enemy->y - mapyoff);
-    	}
-	}
+    // Update enemies
+    update_enemies();
 
     //draw the player's sprite
 	if (facing == 1) {
@@ -686,7 +765,7 @@ void getinput() {
 	
 	// Instruction screen
 	if (key[KEY_LCONTROL] && key[KEY_H]) {
-		//instructions();
+		instructions();
 	}
 	
 	// Background music toggle

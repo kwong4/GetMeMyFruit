@@ -36,20 +36,23 @@
 #define ENEMY2_START_X 19 * 16
 #define ENEMY2_START_Y 3 * 16
 #define ENEMY2_END_X 43 * 16
-#define ENEMY3_START_X 116 * 16
+#define ENEMY3_START_X 104 * 16
 #define ENEMY3_START_Y 8 * 16
-#define ENEMY3_END_X 104 * 16
-#define ENEMY4_START_X 118 * 16
+#define ENEMY3_END_X 116 * 16
+#define ENEMY4_START_X 88 * 16
 #define ENEMY4_START_Y 25 * 16
-#define ENEMY4_END_X 88 * 16
+#define ENEMY4_END_X 118 * 16
 #define START_POINT_X 59 * 16
 #define START_POINT_Y 24 * 14
 #define WALKFRAME_MIN 2 
 #define WALKFRAME_MAX 3
 #define WAITFRAME_MIN 0
 #define WAITFRAME_MAX 1
+#define EASY_MODE 1
+#define HARD_MODE 2
 #define FRUIT_MAX 4
 #define FRAME_DELAY 6
+#define FRAME_DELAY_ENEMY 14
 #define PLAYER_MAX_FRAME 4
 #define JUMPFRAME 4
 #define WAITCOUNT_MAX 5
@@ -61,6 +64,7 @@ typedef struct SPRITE
 {
     int dir, alive;
     int x,y;
+    int min_x, max_x;
     int width,height;
     int xspeed,yspeed;
     int xdelay,ydelay;
