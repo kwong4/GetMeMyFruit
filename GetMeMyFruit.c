@@ -265,7 +265,10 @@ void setupscreen() {
 void setupgame() {
 	
 	// Loop variable
-	int i;
+	int i, j;
+	
+	// Temporary variables
+	BITMAP *temp;
 	
 	//Play background music
 	play_sample(background_music, 128, 128, 1000, TRUE);
@@ -337,8 +340,109 @@ void setupgame() {
 	fruits[3]->width = fruits_image[3]->w;
 	fruits[3]->height = fruits_image[3]->h;
 	fruits[3]->data = 3;
-	fruits[3]->alive = 1;
+	fruits[3]->alive = 1;         
+    
+    // Load green enemy
+    temp = load_bitmap(ENEMY1, NULL); 
+    
+    // Error checking
+	if (!temp) {
+		allegro_message("Error loading enemy sprites");
+		return;
+	}
 	
+    for (i = 0; i < 6; i++) {
+	    green_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
+    	
+    }
+    destroy_bitmap(temp);
+    
+    // Load green enemy
+    temp = load_bitmap(ENEMY2, NULL); 
+    
+    // Error checking
+	if (!temp) {
+		allegro_message("Error loading enemy sprites");
+		return;
+	}
+	
+    for (i = 0; i < 6; i++) {
+	    orange_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
+    }
+    destroy_bitmap(temp);
+    
+    // Load green enemy
+    temp = load_bitmap(ENEMY3, NULL); 
+    
+    // Error checking
+	if (!temp) {
+		allegro_message("Error loading enemy sprites");
+		return;
+	}
+	
+    for (i = 0; i < 6; i++) {
+	    red_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
+    }
+    destroy_bitmap(temp);
+    
+    // Load green enemy
+    temp = load_bitmap(ENEMY4, NULL); 
+    
+    // Error checking
+	if (!temp) {
+		allegro_message("Error loading enemy sprites");
+		return;
+	}
+	
+    for (i = 0; i < 7; i++) {
+	    blue_enemy_image[i] = grabframe(temp, 16, 16, 0, 0, 6, i);
+    }
+	destroy_bitmap(temp);
+	
+	// Initalize enemies
+	green_enemy = malloc(sizeof(SPRITE));
+    green_enemy->x = ENEMY1_START_X;
+    green_enemy->y = ENEMY1_START_Y;
+    green_enemy->curframe= 0;
+    green_enemy->framecount= 0;
+    green_enemy->framedelay= FRAME_DELAY;
+    green_enemy->maxframe= 5;
+    green_enemy->width= green_enemy_image[0]->w;
+    green_enemy->height= green_enemy_image[0]->h;
+    green_enemy->alive = 1;
+    
+    orange_enemy = malloc(sizeof(SPRITE));
+    orange_enemy->x = ENEMY2_START_X;
+    orange_enemy->y = ENEMY2_START_Y;
+    orange_enemy->curframe= 0;
+    orange_enemy->framecount= 0;
+    orange_enemy->framedelay= FRAME_DELAY;
+    orange_enemy->maxframe= 5;
+    orange_enemy->width= orange_enemy_image[0]->w;
+    orange_enemy->height= orange_enemy_image[0]->h;
+    orange_enemy->alive = 1;
+    
+    red_enemy = malloc(sizeof(SPRITE));
+    red_enemy->x = ENEMY3_START_X;
+    red_enemy->y = ENEMY3_START_Y;
+    red_enemy->curframe= 0;
+    red_enemy->framecount= 0;
+    red_enemy->framedelay= FRAME_DELAY;
+    red_enemy->maxframe= 5;
+    red_enemy->width= red_enemy_image[0]->w;
+    red_enemy->height= red_enemy_image[0]->h;
+    red_enemy->alive = 1;
+    
+    blue_enemy = malloc(sizeof(SPRITE));
+    blue_enemy->x = ENEMY4_START_X;
+    blue_enemy->y = ENEMY4_START_Y;
+    blue_enemy->curframe= 0;
+    blue_enemy->framecount= 0;
+    blue_enemy->framedelay= FRAME_DELAY;
+    blue_enemy->maxframe= 5;
+    blue_enemy->width= blue_enemy_image[0]->w;
+    blue_enemy->height= blue_enemy_image[0]->h;
+    blue_enemy->alive = 1;
 }
 
 void walk(int dir) {
@@ -472,17 +576,18 @@ void update() {
 	rect(buffer, WIDTH - 155, 2, WIDTH - 5, 40, BLACK);
 	textout_ex(buffer, font, "FRUIT COLLECTED: ", WIDTH - 150, 5, BLACK, -1);
 
+	// Player coordinates
+	x1 = player->x;
+    y1 = player->y;
+    x2 = x1 + player->width;
+    y2 = y1 + player->height;
+
 	//draw fruit
     for (i = 0; i < FRUIT_MAX; i++) {
     	
     	if (fruits[i]->alive == 1) {
     		
-			 //get fruit bounding rectangle
-            x1 = player->x;
-            y1 = player->y;
-            x2 = x1 + player->width;
-            y2 = y1 + player->height;
-
+			//get fruit bounding rectangl
     		if (inside_box(fruits[i]->x + fruits[i]->width/2, fruits[i]->y + fruits[i]->height/2, x1, y1, x2, y2)) {
     			fruits[i]->alive = 0;
     			fruit_collected++;
@@ -498,6 +603,63 @@ void update() {
 		        WIDTH - 125 + 25 * i, 15);
     	}
     }
+    
+    // Draw enemies
+    if (green_enemy->alive == 1) {
+    		
+			//get enemy bounding rectangle
+    		if (inside_box(green_enemy->x + green_enemy->width/2, green_enemy->y + green_enemy->height/2, x1, y1, x2, y2)) {
+    			player->alive = 0;
+    			gameover = 1;
+    		}
+
+    		if (inside(green_enemy)) {
+		        draw_sprite(buffer, green_enemy_image[green_enemy->curframe],
+		        green_enemy->x - mapxoff, green_enemy->y - mapyoff);
+	    	}
+    	}
+    	
+    if (red_enemy->alive == 1) {
+    		
+		//get enemy bounding rectangle
+		if (inside_box(red_enemy->x + red_enemy->width/2, red_enemy->y + red_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(red_enemy)) {
+	        draw_sprite(buffer, red_enemy_image[red_enemy->curframe],
+	        red_enemy->x - mapxoff, red_enemy->y - mapyoff);
+    	}
+	}
+	
+	if (orange_enemy->alive == 1) {
+    		
+		//get enemy bounding rectangle
+		if (inside_box(orange_enemy->x + orange_enemy->width/2, orange_enemy->y + orange_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(orange_enemy)) {
+	        draw_sprite(buffer, orange_enemy_image[orange_enemy->curframe],
+	        orange_enemy->x - mapxoff, orange_enemy->y - mapyoff);
+    	}
+	}
+	
+	if (blue_enemy->alive == 1) {
+    		
+		//get enemy bounding rectangle
+		if (inside_box(blue_enemy->x + blue_enemy->width/2, blue_enemy->y + blue_enemy->height/2, x1, y1, x2, y2)) {
+			player->alive = 0;
+			gameover = 1;
+		}
+
+		if (inside(blue_enemy)) {
+	        draw_sprite(buffer, blue_enemy_image[blue_enemy->curframe],
+	        blue_enemy->x - mapxoff, blue_enemy->y - mapyoff);
+    	}
+	}
 
     //draw the player's sprite
 	if (facing == 1) {
@@ -635,6 +797,17 @@ int main (void)
 		destroy_bitmap(fruits_image[i]);
 		free(fruits[i]);
 	}
+	for (i = 0; i < 6; i++) {
+		destroy_bitmap(orange_enemy_image[i]);
+		destroy_bitmap(red_enemy_image[i]);
+		destroy_bitmap(blue_enemy_image[i]);
+		destroy_bitmap(green_enemy_image[i]);
+	}
+	free(red_enemy);
+	free(orange_enemy);
+	free(blue_enemy);
+	free(green_enemy);
+	destroy_bitmap(blue_enemy_image[6]);
 	destroy_sample(background_music);
 	destroy_sample(click_sound);
 	MapFreeMem();

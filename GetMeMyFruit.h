@@ -26,6 +26,22 @@
 #define GETMEMYFRUIT "sprites/GetMeMyFruit.bmp"
 #define BACKGROUND_SOUND "sounds/background.wav"
 #define CLICK_SOUND "sounds/click.wav"
+#define ENEMY1 "sprites/enemies1.bmp"
+#define ENEMY2 "sprites/enemies2.bmp"
+#define ENEMY3 "sprites/enemies3.bmp"
+#define ENEMY4 "sprites/enemies4.bmp"
+#define ENEMY1_START_X 3 * 16
+#define ENEMY1_START_Y 27 * 16
+#define ENEMY1_END_X 31 * 16
+#define ENEMY2_START_X 19 * 16
+#define ENEMY2_START_Y 3 * 16
+#define ENEMY2_END_X 43 * 16
+#define ENEMY3_START_X 116 * 16
+#define ENEMY3_START_Y 8 * 16
+#define ENEMY3_END_X 104 * 16
+#define ENEMY4_START_X 118 * 16
+#define ENEMY4_START_Y 25 * 16
+#define ENEMY4_END_X 88 * 16
 #define START_POINT_X 59 * 16
 #define START_POINT_Y 24 * 14
 #define WALKFRAME_MIN 2 
@@ -59,6 +75,14 @@ BITMAP *player_image[5];
 SPRITE *player;
 BITMAP *fruits_image[4];
 SPRITE *fruits[4];
+BITMAP *green_enemy_image[6];
+SPRITE *green_enemy;
+BITMAP *blue_enemy_image[7];
+SPRITE *blue_enemy;
+BITMAP *orange_enemy_image[6];
+SPRITE *orange_enemy;
+BITMAP *red_enemy_image[6];
+SPRITE *red_enemy;
 BITMAP *buffer;	
 BITMAP *temp;
 BITMAP *title;
